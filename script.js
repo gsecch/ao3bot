@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 @app.route("/search", methods=["POST"])
 def search():
+    # Get the link from the request form
     link = request.form.get("link")
     if not link:
         return jsonify({"error": "Missing link parameter"}), 400
