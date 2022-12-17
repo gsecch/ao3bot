@@ -1,27 +1,34 @@
-/*
-This is your site JavaScript code - you can add interactivity and carry out processing
-- Initially the JS writes a message to the console, and moves a button you can add from the README
-*/
+import requests
+from bs4 import BeautifulSoup
+from flask import Flask, request, jsonify
 
-// Print a message in the browser's dev tools console each time the page loads
-// Use your menus or right-click / control-click and choose "Inspect" > "Console"
-console.log("Hello 🌎");
+app = Flask(__name__)
 
-/* 
-Make the "Click me!" button move when the visitor clicks it:
-- First add the button to the page by following the "Next steps" in the README
-*/
-const btn = document.querySelector("button"); // Get the button from the page
-// Detect clicks on the button
-if (btn) {
-  btn.onclick = function() {
-    // The JS works in conjunction with the 'dipped' code in style.css
-    btn.classList.toggle("dipped");
-  };
-}
+@app.route("/search", methods=["POST"])
+def search():
+    link = request.form.get("link")
+    if not link:
+        return jsonify({"error": "Missing link parameter"}), 400
 
-// This is a single line JS comment
-/*
-This is a comment that can span multiple lines 
-- use comments to make your own notes!
-*/
+    # Make a GET request to the AO3 website and pass the search term as a parameter in the query string
+    url = f"https://archiveofourown.org/works?utf8=✓&work_search%5Bquery%5D={link}&commit=Search"
+    response = requests.get(url)
+
+    # Parse the HTML response using Beautiful Soup
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Find all the elements with the "work" class
+    works = soup.find_all("li", class_="work")
+
+    # Extract the data for each work
+    results = []
+    for work in works:
+        title = work.find("h4", class_="title").text
+        link = work.find("h4", class_="title").find("a").get("href")
+        description = work.find("blockquote", class_="description").text
+        results.append({"title": title, "link": link, "description": description})
+
+    return jsonify({"results": results})
+
+if __name__ == "__main__":
+    app.run()
