@@ -1,34 +1,61 @@
-import requests
-from bs4 import BeautifulSoup
-from flask import Flask, request, jsonify
+/* This is a comment */
 
-app = Flask(__name__)
+/* Define a class for the body element */
+body {
+  background-color: white;
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+}
 
-@app.route("/search", methods=["POST"])
-def search():
-    link = request.form.get("link")
-    if not link:
-        return jsonify({"error": "Missing link parameter"}), 400
+/* Define a class for the main content area */
+.main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
 
-    # Make a GET request to the AO3 website and pass the search term as a parameter in the query string
-    url = f"https://archiveofourown.org/works?utf8=✓&work_search%5Bquery%5D={link}&commit=Search"
-    response = requests.get(url)
+/* Define a class for the search form */
+form {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 20px;
+}
 
-    # Parse the HTML response using Beautiful Soup
-    soup = BeautifulSoup(response.text, "html.parser")
+form input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
 
-    # Find all the elements with the "work" class
-    works = soup.find_all("li", class_="work")
+form input[type="submit"] {
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
-    # Extract the data for each work
-    results = []
-    for work in works:
-        title = work.find("h4", class_="title").text
-        link = work.find("h4", class_="title").find("a").get("href")
-        description = work.find("blockquote", class_="description").text
-        results.append({"title": title, "link": link, "description": description})
+/* Define a class for the search results */
+.results {
+  display: flex;
+  flex-wrap: wrap;
+}
 
-    return jsonify({"results": results})
+.result {
+  width: 33%;
+  padding: 20px;
+  box-sizing: border-box;
+}
 
-if __name__ == "__main__":
-    app.run()
+.result h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.result p {
+  margin: 10px 0;
+}

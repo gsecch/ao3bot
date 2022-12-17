@@ -1,35 +1,40 @@
-import requests
-from bs4 import BeautifulSoup
-from flask import Flask, request, jsonify
+const axios = require("axios");
+const cheerio = require("cheerio");
 
-app = Flask(__name__)
+async function getData(url) {
+  try {
+    // Make a GET request to the URL
+    const response = await axios.get(url);
 
-@app.route("/search", methods=["POST"])
-def search():
-    # Get the link from the request form
-    link = request.form.get("link")
-    if not link:
-        return jsonify({"error": "Missing link parameter"}), 400
+    // Load the HTML content into cheerio
+    const $ = cheerio.load(response.data);
 
-    # Make a GET request to the AO3 website and pass the search term as a parameter in the query string
-    url = f"https://archiveofourown.org/works?utf8=✓&work_search%5Bquery%5D={link}&commit=Search"
-    response = requests.get(url)
+    // Initialize an empty array to store the results
+    const results = [];
 
-    # Parse the HTML response using Beautiful Soup
-    soup = BeautifulSoup(response.text, "html.parser")
+    // Select the elements with the class "work" and iterate over them
+    $(".work").each((i, el) => {
+      // Extract the data from the element
+      const title = $(el).find(".title").text();
+      const link = $(el).find(".title a").attr("href");
+      const description = $(el).find(".description").text();
 
-    # Find all the elements with the "work" class
-    works = soup.find_all("li", class_="work")
+      // Add the data to the results array
+      results.push({
+        title: title,
+        link: link,
+        description: description,
+      });
+    });
 
-    # Extract the data for each work
-    results = []
-    for work in works:
-        title = work.find("h4", class_="title").text
-        link = work.find("h4", class_="title").find("a").get("href")
-        description = work.find("blockquote", class_="description").text
-        results.append({"title": title, "link": link, "description": description})
+    // Return the results
+    return results;
+  } catch (error) {
+    console.error(error);
+  }
+}
 
-    return jsonify({"results": results})
-
-if __name__ == "__main__":
-    app.run()
+// Call the function with the URL of the AO3 page
+getData("https://archiveofourown.org/works/123456").then((results) => {
+  console.log(results);
+});
